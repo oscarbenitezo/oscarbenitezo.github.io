@@ -1,4 +1,6 @@
-/* ... [KEEP EXISTING Vec2, Overlay, Cursor, ThemeToggle Classes] ... */
+/* =========================================
+   HELPER CLASS: VECTOR MATH
+   ========================================= */
 class Vec2 {
     constructor(x, y) { this.x = x || 0; this.y = y || 0; }
     lerp(v, t) { this.x += (v.x - this.x) * t; this.y += (v.y - this.y) * t; return this; }
@@ -7,6 +9,16 @@ class Vec2 {
     copy(v) { this.x = v.x; this.y = v.y; return this; }
 }
 
+/* =========================================
+   CLASS: OVERLAY (Grid Transition)
+   ========================================= */
+class Cell {
+    constructor(row, column) {
+        this.DOM = { el: document.createElement('div') };
+        this.DOM.el.style.willChange = 'opacity, transform';
+        this.row = row; this.column = column;
+    }
+}
 class Overlay {
     constructor(DOM_el, customOptions) {
         this.DOM = { el: DOM_el };
@@ -36,14 +48,9 @@ class Overlay {
     }
 }
 
-class Cell {
-    constructor(row, column) {
-        this.DOM = { el: document.createElement('div') };
-        this.DOM.el.style.willChange = 'opacity, transform';
-        this.row = row; this.column = column;
-    }
-}
-
+/* =========================================
+   CLASS: STICKY CURSOR
+   ========================================= */
 class Cursor {
     constructor(targetEl) {
         this.el = targetEl;
@@ -89,6 +96,9 @@ class Cursor {
     }
 }
 
+/* =========================================
+   CLASS: THEME TOGGLE
+   ========================================= */
 class ThemeToggle {
     constructor(buttonSelector) {
         this.button = document.querySelector(buttonSelector);
@@ -113,6 +123,7 @@ const easing = 0.08;
 let startY = 0; let endY = 0; let raf;
 const lerp = (start, end, t) => start * (1 - t) + end * t;
 
+// 1. PARALLAX
 function parallax(card) {
     const wrapper = card.querySelector('.preview-image');
     if (!wrapper) return;
