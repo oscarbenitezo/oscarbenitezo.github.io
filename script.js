@@ -1,6 +1,4 @@
-/* =========================================
-   HELPER CLASS: VECTOR MATH
-   ========================================= */
+/* ... [KEEP EXISTING Vec2, Overlay, Cursor, ThemeToggle Classes] ... */
 class Vec2 {
     constructor(x, y) { this.x = x || 0; this.y = y || 0; }
     lerp(v, t) { this.x += (v.x - this.x) * t; this.y += (v.y - this.y) * t; return this; }
@@ -9,16 +7,6 @@ class Vec2 {
     copy(v) { this.x = v.x; this.y = v.y; return this; }
 }
 
-/* =========================================
-   CLASS: OVERLAY (Grid Transition)
-   ========================================= */
-class Cell {
-    constructor(row, column) {
-        this.DOM = { el: document.createElement('div') };
-        this.DOM.el.style.willChange = 'opacity, transform';
-        this.row = row; this.column = column;
-    }
-}
 class Overlay {
     constructor(DOM_el, customOptions) {
         this.DOM = { el: DOM_el };
@@ -48,9 +36,14 @@ class Overlay {
     }
 }
 
-/* =========================================
-   CLASS: STICKY CURSOR
-   ========================================= */
+class Cell {
+    constructor(row, column) {
+        this.DOM = { el: document.createElement('div') };
+        this.DOM.el.style.willChange = 'opacity, transform';
+        this.row = row; this.column = column;
+    }
+}
+
 class Cursor {
     constructor(targetEl) {
         this.el = targetEl;
@@ -96,9 +89,6 @@ class Cursor {
     }
 }
 
-/* =========================================
-   CLASS: THEME TOGGLE
-   ========================================= */
 class ThemeToggle {
     constructor(buttonSelector) {
         this.button = document.querySelector(buttonSelector);
@@ -123,7 +113,6 @@ const easing = 0.08;
 let startY = 0; let endY = 0; let raf;
 const lerp = (start, end, t) => start * (1 - t) + end * t;
 
-// 1. PARALLAX
 function parallax(card) {
     const wrapper = card.querySelector('.preview-image');
     if (!wrapper) return;
@@ -158,7 +147,27 @@ const triggers = document.querySelectorAll('.trigger-transition');
 const backButton = document.querySelectorAll('.back-to-home-trigger');
 let isAnimating = false;
 
-// 3. EVENT LISTENERS FOR TRANSITIONS
+// 3. BURGER MENU LOGIC
+const burgerBtn = document.querySelector('.burger-menu');
+const nav = document.querySelector('.header-nav');
+const navLinks = document.querySelectorAll('.nav-item');
+
+if (burgerBtn) {
+    burgerBtn.addEventListener('click', () => {
+        burgerBtn.classList.toggle('open');
+        nav.classList.toggle('nav-open');
+    });
+}
+
+// Close menu when clicking links
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        burgerBtn.classList.remove('open');
+        nav.classList.remove('nav-open');
+    });
+});
+
+// 4. TRANSITIONS
 triggers.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.preventDefault();
