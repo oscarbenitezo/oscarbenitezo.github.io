@@ -1,6 +1,4 @@
-/* =========================================
-   HELPER CLASS: VECTOR MATH
-   ========================================= */
+/* ... [Vec2, Overlay, Cell classes remain same] ... */
 class Vec2 {
     constructor(x, y) { this.x = x || 0; this.y = y || 0; }
     lerp(v, t) { this.x += (v.x - this.x) * t; this.y += (v.y - this.y) * t; return this; }
@@ -9,16 +7,6 @@ class Vec2 {
     copy(v) { this.x = v.x; this.y = v.y; return this; }
 }
 
-/* =========================================
-   CLASS: OVERLAY (Grid Transition)
-   ========================================= */
-class Cell {
-    constructor(row, column) {
-        this.DOM = { el: document.createElement('div') };
-        this.DOM.el.style.willChange = 'opacity, transform';
-        this.row = row; this.column = column;
-    }
-}
 class Overlay {
     constructor(DOM_el, customOptions) {
         this.DOM = { el: DOM_el };
@@ -48,8 +36,16 @@ class Overlay {
     }
 }
 
+class Cell {
+    constructor(row, column) {
+        this.DOM = { el: document.createElement('div') };
+        this.DOM.el.style.willChange = 'opacity, transform';
+        this.row = row; this.column = column;
+    }
+}
+
 /* =========================================
-   CLASS: STICKY CURSOR
+   CLASS: STICKY CURSOR (With Tuned Physics)
    ========================================= */
 class Cursor {
     constructor(targetEl) {
@@ -72,15 +68,24 @@ class Cursor {
         }
     }
     updateTargetPosition(x, y) {
-        if (this.isHovered) {
-            const bounds = this.hoverEl.getBoundingClientRect();
-            const cx = bounds.x + bounds.width / 2;
-            const cy = bounds.y + bounds.height / 2;
-            const dx = x - cx; const dy = y - cy;
-            this.position.target.x = cx + dx * 0.15;
-            this.position.target.y = cy + dy * 0.15;
-            this.scale.target = 2;
-            gsap.to(this.el, { scaleX: 2, scaleY: 2, duration: 0.3, ease: "power2.out", overwrite: true });
+        if (this.isHovered && this.hoverEl) {
+            const isCard = this.hoverEl.classList.contains('grid--item');
+            
+            if (isCard) {
+                this.position.target.x = x;
+                this.position.target.y = y;
+                this.scale.target = 1; 
+                gsap.set(this.el, { rotate: 0 });
+            } else {
+                const bounds = this.hoverEl.getBoundingClientRect();
+                const cx = bounds.x + bounds.width / 2;
+                const cy = bounds.y + bounds.height / 2;
+                const dx = x - cx; const dy = y - cy;
+                this.position.target.x = cx + dx * 0.15;
+                this.position.target.y = cy + dy * 0.15;
+                this.scale.target = 2;
+                gsap.to(this.el, { scaleX: 2, scaleY: 2, duration: 0.3, ease: "power2.out", overwrite: true });
+            }
         } else {
             this.position.target.x = x; this.position.target.y = y; this.scale.target = 1;
             gsap.to(this.el, { scaleX: 1, scaleY: 1, duration: 0.3, overwrite: true });
@@ -88,17 +93,43 @@ class Cursor {
     }
     addListeners() {
         gsap.utils.toArray("[data-hover]").forEach((hoverEl) => {
-            const hoverBoundsEl = hoverEl.querySelector("[data-hover-bounds]");
-            const targetEl = hoverBoundsEl || hoverEl;
-            targetEl.addEventListener("pointerover", () => { this.isHovered = true; this.hoverEl = targetEl; });
-            targetEl.addEventListener("pointerout", () => { this.isHovered = false; this.hoverEl = null; });
+            const isCard = hoverEl.classList.contains('grid--item');
+            
+            // 1. INCREASED PULL STRENGTH FOR CARDS (0.02 -> 0.08)
+            const pullStrength = isCard ? 0.08 : 0.3; 
+
+            // 2. SMOOTHER EASING FOR CARDS (power3.out instead of elastic)
+            const movementEase = isCard ? "power3.out" : "elastic.out(1, 0.3)";
+            const movementDur = isCard ? 0.5 : 1;
+
+            const xTo = gsap.quickTo(hoverEl, "x", { duration: movementDur, ease: movementEase });
+            const yTo = gsap.quickTo(hoverEl, "y", { duration: movementDur, ease: movementEase });
+
+            hoverEl.addEventListener("mouseenter", () => {
+                this.isHovered = true;
+                this.hoverEl = hoverEl;
+            });
+
+            hoverEl.addEventListener("mouseleave", () => {
+                this.isHovered = false;
+                this.hoverEl = null;
+                xTo(0); yTo(0);
+            });
+
+            hoverEl.addEventListener("mousemove", (event) => {
+                const { clientX: cx, clientY: cy } = event;
+                const { height, width, left, top } = hoverEl.getBoundingClientRect();
+                const x = cx - (left + width / 2);
+                const y = cy - (top + height / 2);
+                xTo(x * pullStrength); 
+                yTo(y * pullStrength);
+            });
         });
     }
 }
 
-/* =========================================
-   CLASS: THEME TOGGLE
-   ========================================= */
+/* ... [Rest of JS: ThemeToggle, Scroll, Init, etc.] ... */
+/* (Copy rest from previous response) */
 class ThemeToggle {
     constructor(buttonSelector) {
         this.button = document.querySelector(buttonSelector);
@@ -113,9 +144,6 @@ class ThemeToggle {
     }
 }
 
-/* =========================================
-   SMOOTH SCROLL & PARALLAX
-   ========================================= */
 const body = document.body;
 const scrollContent = document.querySelector('.scroll-content');
 const cards = document.querySelectorAll('.grid--item'); 
@@ -123,7 +151,6 @@ const easing = 0.08;
 let startY = 0; let endY = 0; let raf;
 const lerp = (start, end, t) => start * (1 - t) + end * t;
 
-// 1. PARALLAX
 function parallax(card) {
     const wrapper = card.querySelector('.preview-image');
     if (!wrapper) return;
@@ -147,7 +174,6 @@ function updateScroll() {
     raf = requestAnimationFrame(updateScroll);
 }
 
-// 2. INIT ALL
 const cursor = new Cursor(document.querySelector(".cursor"));
 const toggle = new ThemeToggle(".theme-toggle");
 const overlayEl = document.querySelector('.overlay');
@@ -158,7 +184,6 @@ const triggers = document.querySelectorAll('.trigger-transition');
 const backButton = document.querySelectorAll('.back-to-home-trigger');
 let isAnimating = false;
 
-// 3. BURGER MENU LOGIC
 const burgerBtn = document.querySelector('.burger-menu');
 const nav = document.querySelector('.header-nav');
 const navLinks = document.querySelectorAll('.nav-item');
@@ -169,8 +194,6 @@ if (burgerBtn) {
         nav.classList.toggle('nav-open');
     });
 }
-
-// Close menu when clicking links
 navLinks.forEach(link => {
     link.addEventListener('click', () => {
         burgerBtn.classList.remove('open');
@@ -178,7 +201,6 @@ navLinks.forEach(link => {
     });
 });
 
-// 4. TRANSITIONS
 triggers.forEach(btn => {
     btn.addEventListener('click', (e) => {
         e.preventDefault();
