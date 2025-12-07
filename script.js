@@ -1,4 +1,6 @@
-/* ... [Vec2, Overlay, Cell classes remain same] ... */
+/* =========================================
+   HELPER CLASS: VECTOR MATH
+   ========================================= */
 class Vec2 {
     constructor(x, y) { this.x = x || 0; this.y = y || 0; }
     lerp(v, t) { this.x += (v.x - this.x) * t; this.y += (v.y - this.y) * t; return this; }
@@ -7,6 +9,16 @@ class Vec2 {
     copy(v) { this.x = v.x; this.y = v.y; return this; }
 }
 
+/* =========================================
+   CLASS: OVERLAY (Grid Transition)
+   ========================================= */
+class Cell {
+    constructor(row, column) {
+        this.DOM = { el: document.createElement('div') };
+        this.DOM.el.style.willChange = 'opacity, transform';
+        this.row = row; this.column = column;
+    }
+}
 class Overlay {
     constructor(DOM_el, customOptions) {
         this.DOM = { el: DOM_el };
@@ -24,28 +36,20 @@ class Overlay {
     show(customConfig = {}) {
         return new Promise((resolve) => {
             const config = Object.assign({ transformOrigin: '50% 50%', duration: 0.2, ease: 'none', stagger: { grid: [this.options.rows, this.options.columns], from: 0, each: 0.005, ease: 'none' } }, customConfig);
-            gsap.set(this.DOM.el, { opacity: 1 });
+            gsap.set(this.DOM.el, { opacity: 1, pointerEvents: 'auto' });
             gsap.fromTo(this.cells.map(cell => cell.DOM.el), { scale: 0, opacity: 0, transformOrigin: config.transformOrigin }, { duration: config.duration, ease: config.ease, scale: 1.01, opacity: 1, stagger: config.stagger, onComplete: resolve });
         });
     }
     hide(customConfig = {}) {
         return new Promise((resolve) => {
             const config = Object.assign({ transformOrigin: '50% 50%', duration: 0.2, ease: 'none', stagger: { grid: [this.options.rows, this.options.columns], from: 0, each: 0.005, ease: 'none' } }, customConfig);
-            gsap.to(this.cells.map(cell => cell.DOM.el), { duration: config.duration, ease: config.ease, scale: 0, opacity: 0, transformOrigin: config.transformOrigin, stagger: config.stagger, onComplete: () => { gsap.set(this.DOM.el, { opacity: 0 }); resolve(); } });
+            gsap.to(this.cells.map(cell => cell.DOM.el), { duration: config.duration, ease: config.ease, scale: 0, opacity: 0, transformOrigin: config.transformOrigin, stagger: config.stagger, onComplete: () => { gsap.set(this.DOM.el, { opacity: 0, pointerEvents: 'none' }); resolve(); } });
         });
     }
 }
 
-class Cell {
-    constructor(row, column) {
-        this.DOM = { el: document.createElement('div') };
-        this.DOM.el.style.willChange = 'opacity, transform';
-        this.row = row; this.column = column;
-    }
-}
-
 /* =========================================
-   CLASS: STICKY CURSOR (With Tuned Physics)
+   CLASS: STICKY CURSOR
    ========================================= */
 class Cursor {
     constructor(targetEl) {
@@ -69,14 +73,17 @@ class Cursor {
     }
     updateTargetPosition(x, y) {
         if (this.isHovered && this.hoverEl) {
-            const isCard = this.hoverEl.classList.contains('grid--item');
+            // Check for Cards OR Gallery Images
+            const isCard = this.hoverEl.classList.contains('grid--item') || this.hoverEl.classList.contains('gallery-item');
             
             if (isCard) {
+                // Low magnetism for cards
                 this.position.target.x = x;
                 this.position.target.y = y;
                 this.scale.target = 1; 
                 gsap.set(this.el, { rotate: 0 });
             } else {
+                // High magnetism for buttons
                 const bounds = this.hoverEl.getBoundingClientRect();
                 const cx = bounds.x + bounds.width / 2;
                 const cy = bounds.y + bounds.height / 2;
@@ -93,12 +100,8 @@ class Cursor {
     }
     addListeners() {
         gsap.utils.toArray("[data-hover]").forEach((hoverEl) => {
-            const isCard = hoverEl.classList.contains('grid--item');
-            
-            // 1. INCREASED PULL STRENGTH FOR CARDS (0.02 -> 0.08)
+            const isCard = hoverEl.classList.contains('grid--item') || hoverEl.classList.contains('gallery-item');
             const pullStrength = isCard ? 0.08 : 0.3; 
-
-            // 2. SMOOTHER EASING FOR CARDS (power3.out instead of elastic)
             const movementEase = isCard ? "power3.out" : "elastic.out(1, 0.3)";
             const movementDur = isCard ? 0.5 : 1;
 
@@ -109,27 +112,25 @@ class Cursor {
                 this.isHovered = true;
                 this.hoverEl = hoverEl;
             });
-
             hoverEl.addEventListener("mouseleave", () => {
                 this.isHovered = false;
                 this.hoverEl = null;
                 xTo(0); yTo(0);
             });
-
             hoverEl.addEventListener("mousemove", (event) => {
                 const { clientX: cx, clientY: cy } = event;
                 const { height, width, left, top } = hoverEl.getBoundingClientRect();
                 const x = cx - (left + width / 2);
                 const y = cy - (top + height / 2);
-                xTo(x * pullStrength); 
-                yTo(y * pullStrength);
+                xTo(x * pullStrength); yTo(y * pullStrength);
             });
         });
     }
 }
 
-/* ... [Rest of JS: ThemeToggle, Scroll, Init, etc.] ... */
-/* (Copy rest from previous response) */
+/* =========================================
+   CLASS: THEME TOGGLE
+   ========================================= */
 class ThemeToggle {
     constructor(buttonSelector) {
         this.button = document.querySelector(buttonSelector);
@@ -144,6 +145,9 @@ class ThemeToggle {
     }
 }
 
+/* =========================================
+   SMOOTH SCROLL & PARALLAX
+   ========================================= */
 const body = document.body;
 const scrollContent = document.querySelector('.scroll-content');
 const cards = document.querySelectorAll('.grid--item'); 
@@ -165,79 +169,150 @@ function parallax(card) {
 }
 
 const activateParallax = () => cards.forEach(parallax);
-function setBodyHeight() { body.style.height = `${scrollContent.clientHeight}px`; }
+function setBodyHeight() { 
+    // FIX: Ensure scrollContent exists before checking height
+    if(scrollContent) body.style.height = `${scrollContent.clientHeight}px`; 
+}
 function startScroll() { endY = window.scrollY; }
 function updateScroll() {
     startY = lerp(startY, endY, easing);
-    scrollContent.style.transform = `translate3d(0, -${startY}px, 0)`;
+    if(scrollContent) scrollContent.style.transform = `translate3d(0, -${startY}px, 0)`;
     activateParallax();
     raf = requestAnimationFrame(updateScroll);
 }
 
+// 2. INIT ALL
+// Initialize Cursor & Theme (These exist on all pages)
 const cursor = new Cursor(document.querySelector(".cursor"));
 const toggle = new ThemeToggle(".theme-toggle");
+
+// Initialize Overlay (Exists on all pages)
 const overlayEl = document.querySelector('.overlay');
 const overlay = new Overlay(overlayEl, { rows: 8, columns: 14 });
-const landingView = document.querySelector('.landing-view');
-const portfolioView = document.querySelector('.portfolio-view');
-const triggers = document.querySelectorAll('.trigger-transition');
-const backButton = document.querySelectorAll('.back-to-home-trigger');
-let isAnimating = false;
 
-const burgerBtn = document.querySelector('.burger-menu');
-const nav = document.querySelector('.header-nav');
-const navLinks = document.querySelectorAll('.nav-item');
-
-if (burgerBtn) {
-    burgerBtn.addEventListener('click', () => {
-        burgerBtn.classList.toggle('open');
-        nav.classList.toggle('nav-open');
-    });
-}
-navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        burgerBtn.classList.remove('open');
-        nav.classList.remove('nav-open');
-    });
+// PAGE LOAD TRANSITION: Animate IN on every page load
+window.addEventListener('load', () => { 
+    setBodyHeight(); 
+    updateScroll();
+    
+    // Reveal Page Logic
+    if (overlayEl) { gsap.set(overlayEl, { opacity: 1 }); }
+    overlay.hide({ transformOrigin: '50% 100%', duration: 0.5, ease: 'power2', stagger: index => 0.005 * index });
 });
 
-triggers.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (isAnimating) return;
-        isAnimating = true;
-        overlay.show({ transformOrigin: '50% 0%', duration: 0.2, ease: 'power3.inOut', stagger: index => 0.005 * index }).then(() => {
-            landingView.classList.add('view--hidden');
-            portfolioView.classList.add('view--active');
-            setBodyHeight();
-            window.scrollTo(0, 0); endY = 0; startY = 0; 
-            overlay.hide({ transformOrigin: '50% 100%', duration: 0.2, ease: 'power2', stagger: index => 0.005 * index }).then(() => isAnimating = false);
-        });
-    });
-});
+window.addEventListener('scroll', startScroll, false);
+const observer = new ResizeObserver(() => { setBodyHeight(); });
+if(scrollContent) observer.observe(scrollContent);
 
-backButton.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (isAnimating) return;
-        isAnimating = true;
-        overlay.show({ transformOrigin: '50% 100%', duration: 0.2, ease: 'power3.inOut', stagger: index => 0.005 * index }).then(() => {
-            portfolioView.classList.remove('view--active');
-            landingView.classList.remove('view--hidden');
-            setBodyHeight();
-            window.scrollTo(0, 0); endY = 0; startY = 0;
-            overlay.hide({ transformOrigin: '50% 0%', duration: 0.2, ease: 'power2', stagger: index => 0.005 * index }).then(() => isAnimating = false);
-        });
-    });
-});
-
+// GSAP Ticker for Cursor
 window.addEventListener("pointermove", (event) => {
     const x = event.clientX; const y = event.clientY;
     cursor.updateTargetPosition(x, y);
 });
 gsap.ticker.add(() => { cursor.update(); });
 
-window.addEventListener('load', () => { setBodyHeight(); updateScroll(); });
-window.addEventListener('scroll', startScroll, false);
-const observer = new ResizeObserver(() => { setBodyHeight(); });
-observer.observe(scrollContent);
+/* =========================================
+   SPA LOGIC (Conditional)
+   ========================================= */
+const landingView = document.querySelector('.landing-view');
+const portfolioView = document.querySelector('.portfolio-view');
+const triggers = document.querySelectorAll('.trigger-transition');
+const backButton = document.querySelectorAll('.back-to-home-trigger');
+let isAnimating = false;
+
+// BURGER MENU LOGIC
+const burgerBtn = document.querySelector('.burger-menu');
+const nav = document.querySelector('.header-nav');
+const navLinks = document.querySelectorAll('.nav-item');
+
+if (burgerBtn && nav) {
+    burgerBtn.addEventListener('click', () => {
+        burgerBtn.classList.toggle('open');
+        nav.classList.toggle('nav-open');
+    });
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            burgerBtn.classList.remove('open');
+            nav.classList.remove('nav-open');
+        });
+    });
+}
+
+// PAGE-LEVEL TRANSITIONS (navigate to other pages with overlay)
+const pageTransitionLinks = document.querySelectorAll('[data-page-transition]');
+if (overlay && pageTransitionLinks.length) {
+    pageTransitionLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const target = link.dataset.pageTransition;
+            if (!target || target === '#') return;
+            e.preventDefault();
+            if (isAnimating) return;
+            isAnimating = true;
+            overlay.show({ transformOrigin: '50% 50%', duration: 0.25, ease: 'power2.inOut', stagger: index => 0.005 * index }).then(() => {
+                window.location.href = target;
+            });
+        });
+    });
+}
+
+// Make preview images act like their title links
+const previewLinks = document.querySelectorAll('.grid--item .preview--container');
+previewLinks.forEach(preview => {
+    preview.addEventListener('click', () => {
+        const card = preview.closest('.grid--item');
+        const link = card ? card.querySelector('.title--container a') : null;
+        if (link) { link.click(); }
+    });
+});
+
+// SPA TRANSITIONS (Only run if we have the views)
+if (landingView && portfolioView) {
+
+    const sections = document.querySelectorAll('.portfolio-section');
+
+    const showSection = (targetId) => {
+        // Hide non-target sections when a target is provided; show all if none.
+        sections.forEach(section => {
+            const shouldShow = !targetId || `#${section.id}` === targetId;
+            section.classList.toggle('is-hidden', !shouldShow);
+        });
+    };
+
+    // 1. HOME -> PORTFOLIO
+    triggers.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (isAnimating) return;
+            isAnimating = true;
+            const targetId = btn.dataset.target;
+            overlay.show({ transformOrigin: '50% 0%', duration: 0.2, ease: 'power3.inOut', stagger: index => 0.005 * index }).then(() => {
+                landingView.classList.add('view--hidden');
+                portfolioView.classList.add('view--active');
+                showSection(targetId);
+                setBodyHeight();
+                // Stay at the top so the header is visible when the portfolio loads
+                window.scrollTo(0, 0);
+                startY = 0;
+                endY = 0;
+                overlay.hide({ transformOrigin: '50% 100%', duration: 0.2, ease: 'power2', stagger: index => 0.005 * index }).then(() => isAnimating = false);
+            });
+        });
+    });
+
+    // 2. PORTFOLIO -> HOME
+    backButton.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (isAnimating) return;
+            isAnimating = true;
+            overlay.show({ transformOrigin: '50% 100%', duration: 0.2, ease: 'power3.inOut', stagger: index => 0.005 * index }).then(() => {
+                portfolioView.classList.remove('view--active');
+                landingView.classList.remove('view--hidden');
+                setBodyHeight();
+                window.scrollTo(0, 0); endY = 0; startY = 0;
+                overlay.hide({ transformOrigin: '50% 0%', duration: 0.2, ease: 'power2', stagger: index => 0.005 * index }).then(() => isAnimating = false);
+            });
+        });
+    });
+}
