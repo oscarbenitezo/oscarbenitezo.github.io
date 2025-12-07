@@ -266,6 +266,29 @@ previewLinks.forEach(preview => {
     });
 });
 
+// Process Book modal (project pages)
+const processBookTrigger = document.querySelector('.process-book-trigger');
+const pdfModal = document.getElementById('pdfModal');
+const pdfClose = pdfModal ? pdfModal.querySelector('.pdf-modal__close') : null;
+if (processBookTrigger && pdfModal) {
+    processBookTrigger.addEventListener('click', () => {
+        pdfModal.hidden = false;
+        pdfModal.classList.add('is-open');
+    });
+}
+if (pdfClose && pdfModal) {
+    pdfClose.addEventListener('click', () => {
+        pdfModal.classList.remove('is-open');
+        pdfModal.hidden = true;
+    });
+    pdfModal.addEventListener('click', (e) => {
+        if (e.target === pdfModal) {
+            pdfModal.classList.remove('is-open');
+            pdfModal.hidden = true;
+        }
+    });
+}
+
 // SPA TRANSITIONS (Only run if we have the views)
 if (landingView && portfolioView) {
 
