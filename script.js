@@ -379,6 +379,17 @@ if (landingView && portfolioView) {
             });
         });
     });
+
+    // Hash-based deep link: jump directly to a section on load
+    const hash = window.location.hash;
+    const validSections = ['#graphic-design', '#advertising'];
+    if (validSections.includes(hash)) {
+        landingView.classList.add('view--hidden');
+        portfolioView.classList.add('view--active');
+        showSection(hash);
+        setBodyHeight();
+        window.scrollTo(0, 0);
+    }
 }
 
 

@@ -770,14 +770,14 @@ html[data-dark="true"] .play-overlay { background: rgba(0,0,0,0.8); color: white
     text-transform: uppercase;
     color: #111;
     text-shadow: 3px 3px 0 var(--rams-white), -3px -3px 0 var(--rams-white);
-    transform: translate(-40px, -50px) rotate(-12deg);
+    transform: translate(-40px, -70px) rotate(-12deg);
 }
 
 .ad-gallery .card-badges {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    transform: translate(-18px, 26px) rotate(2deg);
+    transform: translate(-18px, 10px) rotate(2deg);
 }
 
 .ad-gallery .badge-year,
