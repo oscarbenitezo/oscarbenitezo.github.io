@@ -75,8 +75,9 @@ class Cursor {
         if (this.isHovered && this.hoverEl) {
             // Check for Cards OR Gallery Images
             const isCard = this.hoverEl.classList.contains('grid--item') || this.hoverEl.classList.contains('gallery-item');
+            const isLowMag = this.hoverEl.classList.contains('low-magnet');
             
-            if (isCard) {
+            if (isCard || isLowMag) {
                 // Low magnetism for cards
                 this.position.target.x = x;
                 this.position.target.y = y;
@@ -101,9 +102,10 @@ class Cursor {
     addListeners() {
         gsap.utils.toArray("[data-hover]").forEach((hoverEl) => {
             const isCard = hoverEl.classList.contains('grid--item') || hoverEl.classList.contains('gallery-item');
-            const pullStrength = isCard ? 0.08 : 0.3; 
-            const movementEase = isCard ? "power3.out" : "elastic.out(1, 0.3)";
-            const movementDur = isCard ? 0.5 : 1;
+            const isLowMag = hoverEl.classList.contains('low-magnet');
+            const pullStrength = isLowMag ? 0 : (isCard ? 0.08 : 0.3);
+            const movementEase = isLowMag ? "power3.out" : (isCard ? "power3.out" : "elastic.out(1, 0.3)");
+            const movementDur = isLowMag ? 0.35 : (isCard ? 0.5 : 1);
 
             const xTo = gsap.quickTo(hoverEl, "x", { duration: movementDur, ease: movementEase });
             const yTo = gsap.quickTo(hoverEl, "y", { duration: movementDur, ease: movementEase });
@@ -267,27 +269,66 @@ previewLinks.forEach(preview => {
 });
 
 // Process Book modal (project pages)
-const processBookTrigger = document.querySelector('.process-book-trigger');
-const pdfModal = document.getElementById('pdfModal');
-const pdfClose = pdfModal ? pdfModal.querySelector('.pdf-modal__close') : null;
-if (processBookTrigger && pdfModal) {
-    processBookTrigger.addEventListener('click', () => {
-        pdfModal.hidden = false;
-        pdfModal.classList.add('is-open');
-    });
-}
-if (pdfClose && pdfModal) {
-    pdfClose.addEventListener('click', () => {
-        pdfModal.classList.remove('is-open');
-        pdfModal.hidden = true;
-    });
-    pdfModal.addEventListener('click', (e) => {
-        if (e.target === pdfModal) {
-            pdfModal.classList.remove('is-open');
-            pdfModal.hidden = true;
-        }
-    });
-}
+// Process Book interactions removed to start fresh
+// Process Book (gooey) + Lightbox
+(() => {
+    const shell = document.querySelector('.process-book-shell');
+    if (!shell) return;
+
+    const viewBtn = shell.querySelector('.view-btn');
+    const downloadBtn = shell.querySelector('.download-btn');
+    const closeBtn = shell.querySelector('.process-close-btn');
+    const lightbox = document.getElementById('pdfLightbox');
+    const pdfSrc = 'media/escaparate/e08eae_a986986648474bcf822e4e2e4284c503.pdf';
+
+    const openSplit = () => shell.classList.add('active');
+    const closeSplit = () => shell.classList.remove('active');
+
+    const openLightbox = () => {
+        if (!lightbox) return;
+        lightbox.classList.add('is-open');
+        lightbox.hidden = false;
+        document.body.classList.add('lightbox-open');
+    };
+
+    const closeLightbox = () => {
+        if (!lightbox) return;
+        lightbox.classList.remove('is-open');
+        lightbox.hidden = true;
+        document.body.classList.remove('lightbox-open');
+    };
+
+    if (viewBtn) {
+        viewBtn.addEventListener('click', () => {
+            if (!shell.classList.contains('active')) {
+                openSplit();
+            } else {
+                openLightbox();
+            }
+        });
+    }
+
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            if (!shell.classList.contains('active')) {
+                openSplit();
+            } else {
+                window.open(pdfSrc, '_blank', 'noopener');
+            }
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSplit);
+    }
+
+    if (lightbox) {
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+    }
+})();
+
 
 // SPA TRANSITIONS (Only run if we have the views)
 if (landingView && portfolioView) {
@@ -339,3 +380,31 @@ if (landingView && portfolioView) {
         });
     });
 }
+
+
+// Advertising floating cards
+(() => {
+    const gallery = document.querySelector('.ad-gallery');
+    if (!gallery) return;
+    const cards = gallery.querySelectorAll('.card');
+    cards.forEach(card => {
+        const lift = card.querySelector('.card-lift');
+        if (!lift) return;
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const maxRotate = 14;
+            const rotateX = ((y - centerY) / centerY) * -maxRotate;
+            const rotateY = ((x - centerX) / centerX) * maxRotate;
+            lift.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.25)`;
+        });
+        card.addEventListener('mouseenter', () => { lift.style.transition = 'none'; });
+        card.addEventListener('mouseleave', () => {
+            lift.style.transition = 'transform 0.5s ease-out';
+            lift.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+        });
+    });
+})();

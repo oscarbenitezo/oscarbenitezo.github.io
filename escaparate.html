@@ -75,13 +75,13 @@
 
             <section class="container-wide case-overview">
                 <figure>
-                    <img src="media/escaparate/Screenshot%202025-12-07%20034640.png" alt="Microsite experience for Escaparate de Maggie">
-                    <img src="media/escaparate/Screenshot%202025-12-07%20034721.png" alt="Poster and brand wall graphics">
+                    <img class="brown-img" src="media/escaparate/Screenshot%202025-12-07%20034721.png" alt="Poster and brand wall graphics">
                 </figure>
                 <div class="case-copy">
+                    <img class="poster-img" src="media/escaparate/Screenshot%202025-12-07%20034640.png" alt="Microsite experience for Escaparate de Maggie">
                     <h4>Microsite & Poster</h4>
-                    <p>The concept of El Escaparate comes from the meaning of the word in Spanish. Escaparate means both wardrobe and storefront, so it’s fitting that the store sells primarily clothing items. Escaparates tend to be made entirely out of wood, and to be very old, but they can last decades in good shape, so the store takes pride on the fact that the second hand items sold are useful and in very good condition.</p>
-                    <p>The store’s look and feeling is inspired by the environment of low income family households, with an influence from Venezuelan artists such as Cruz-Diez, Alejandro Otero and Jesus Soto, with the use of colors, geometric shapes such as stripes, and overlapping.</p>
+                    <p>The concept of El Escaparate comes from the meaning of the word in Spanish. Escaparate means both wardrobe and storefront, so it?s fitting that the store sells primarily clothing items. Escaparates tend to be made entirely out of wood, and to be very old, but they can last decades in good shape, so the store takes pride on the fact that the second hand items sold are useful and in very good condition.</p>
+                    <p>The store?s look and feeling is inspired by the environment of low income family households, with an influence from Venezuelan artists such as Cruz-Diez, Alejandro Otero and Jesus Soto, with the use of colors, geometric shapes such as stripes, and overlapping.</p>
                 </div>
             </section>
 
@@ -90,8 +90,8 @@
                     <div class="gallery-item" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034800.png" alt="Packaging concept in warm wood texture"></div>
                     <div class="gallery-item" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034821.png" alt="Packaging open box detail"></div>
                     <div class="gallery-item" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034845.png" alt="Branded tote bag execution"></div>
-                    <div class="gallery-item" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034909.png" alt="Buildable brochure and packaging insert"></div>
-                    <div class="gallery-item" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034926.png" alt="Brochure assembly detail"></div>
+                    <div class="gallery-item stack-right" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034926.png" alt="Brochure assembly detail"></div>
+                    <div class="gallery-item stack-right" data-hover><img src="media/escaparate/Screenshot%202025-12-07%20034909.png" alt="Buildable brochure and packaging insert"></div>
                 </div>
             </section>
 
@@ -99,16 +99,21 @@
                 <div class="intro-text">
                     <p>Packaging always points back to impact. Every bag or box reminds the buyer their purchase funds essentials for hundreds of people. A small buildable brochure tucks inside to share more about the store and the organization behind it.</p>
                 </div>
-                <div class="process-book-actions">
-                    <a class="series button process-book-trigger" data-hover>Process Book<div data-hover-bounds></div></a>
-                    <a class="series button" href="media/escaparate/e08eae_a986986648474bcf822e4e2e4284c503.pdf" download>Download PDF</a>
+                <div class="process-book-block">
+                    <div class="process-book-shell">
+                        <div class="process-close-btn" aria-label="Collapse process book options">✕</div>
+                        <div class="gooey-wrapper">
+                            <button class="blob-btn view-btn" type="button">View</button>
+                            <button class="blob-btn download-btn" type="button">Download</button>
+                        </div>
+                        <div class="initial-text">Process Book</div>
+                    </div>
                 </div>
                 <div class="video-wrapper process-video">
                     <div class="video-placeholder">Process video coming soon</div>
                 </div>
             </section>
-
-            <section class="next-project">
+<section class="next-project">
                 <div class="container-narrow">
                     <span class="label">Back to Portfolio</span>
                     <a href="index.html" class="next-link big-link" data-page-transition="index.html" data-hover>All Projects<div data-hover-bounds></div></a>
@@ -126,13 +131,19 @@
 
     </div>
 
-    <div class="pdf-modal" id="pdfModal" hidden>
-        <div class="pdf-modal__content">
-            <div class="pdf-modal__header">
-                <h4>Process Book</h4>
-                <button class="pdf-modal__close" aria-label="Close PDF">&times;</button>
-            </div>
-            <object class="pdf-frame" data="media/escaparate/e08eae_a986986648474bcf822e4e2e4284c503.pdf" type="application/pdf"></object>
+    <svg class="visually-hidden" aria-hidden="true" width="0" height="0" focusable="false">
+        <defs>
+            <filter id="goo">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+                <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+            </filter>
+        </defs>
+    </svg>
+
+    <div class="pdf-lightbox" id="pdfLightbox" hidden>
+        <div class="pdf-lightbox__content">
+            <iframe src="media/escaparate/e08eae_a986986648474bcf822e4e2e4284c503.pdf" title="Process Book PDF"></iframe>
         </div>
     </div>
 
